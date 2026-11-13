@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NCCU 面試題庫</title>
+<style>
+  :root {
+    --bg: #1e1e1e;
+    --bg2: #262626;
+    --hover: #2f2f2f;
+    --border: #363636;
+    --text: #dadada;
+    --muted: #999999;
+    --faint: #666666;
+    --green: #34C759;
+    --red: #BE3C32;
+    --nccu-blue: #23417D;
+    --nccu-blue-edge: #3059AB;
+    --link: #A7BCE6;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .spacer { flex: 1; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; display: inline-block; }
+
+  /* ---------- Header ---------- */
+  header { flex: none; height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+  .brand { font-weight: 600; white-space: nowrap; margin-right: 4px; }
+  .seg { display: inline-flex; background: var(--border); border-radius: 6px; padding: 3px; gap: 2px; }
+  .seg button { border: none; background: transparent; color: var(--muted); border-radius: 4px; padding: 4px 14px; cursor: pointer; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--nccu-blue); color: #fff; font-weight: 600; }
+  .progress { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .btn { border-radius: 6px; padding: 6px 16px; cursor: pointer; border: 1px solid var(--border); background: var(--border); color: var(--text); white-space: nowrap; }
+  .btn.primary { background: var(--nccu-blue); border-color: var(--nccu-blue-edge); color: #fff; font-weight: 600; }
+  .btn:hover:not(:disabled) { filter: brightness(1.15); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn:focus-visible, .seg button:focus-visible, a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+
+  /* ---------- Layout ---------- */
+  #app { flex: 1; min-height: 0; display: grid; }
+  #app.list { grid-template-columns: 360px 1fr; }
+  #app.graph { grid-template-columns: 1fr 440px; }
+  #app.list #graphWrap, #app.graph #listView { display: none; }
+  #listView { overflow-y: auto; background: var(--bg2); border-right: 1px solid var(--border); padding: 12px 10px 40px; }
+  #graphWrap { position: relative; overflow: hidden; border-right: 1px solid var(--border); min-width: 0; }
+  #detail { overflow-y: auto; padding: 36px 40px 48px; min-width: 0; }
+  #app.graph #detail { padding: 28px 24px 40px; }
+  .detail-inner { max-width: 720px; margin: 0 auto; }
+
+  /* ---------- List ---------- */
+  .group { margin-bottom: 12px; }
+  .group-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .group-head .count { margin-left: auto; font-weight: 400; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .item { display: grid; grid-template-columns: 16px 1fr; gap: 10px; align-items: start; padding: 8px; border-radius: 6px; text-decoration: none; color: var(--text); }
+  .item:hover { background: var(--hover); }
+  .item.active { background: rgba(48, 89, 171, .35); }
+  .status { width: 16px; height: 16px; margin-top: 2px; border-radius: 50%; border: 1.5px solid var(--faint); display: grid; place-items: center; }
+  .status svg { opacity: 0; }
+  .item.done .status { background: var(--green); border-color: var(--green); }
+  .item.done .status svg { opacity: 1; }
+  .item-text { min-width: 0; }
+  .item-title { display: block; font-weight: 600; line-height: 1.4; }
+  .item-q { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.5; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---------- Question + answer ---------- */
+  .meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 10px; padding: 2px 9px; }
+  .qtitle { font-size: 22px; font-weight: 600; line-height: 1.35; margin: 14px 0 6px; }
+  .qtext { font-size: 16px; line-height: 1.7; margin: 0; }
+  textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; resize: vertical; font: inherit; font-size: 15px; line-height: 1.75; }
+  textarea:focus { outline: none; border-color: var(--nccu-blue-edge); }
+  #answer { min-height: 42vh; margin-top: 20px; }
+  .foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .saved { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+  .saved .dot { width: 7px; height: 7px; }
+
+  /* ---------- Graph ---------- */
+  #graph { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+  #graph.dragging { cursor: grabbing; }
+  #graph.on-node { cursor: pointer; }
+  .legend { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 14px; background: rgba(38, 38, 38, .9); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--muted); }
+  .legend > span { display: inline-flex; align-items: center; gap: 6px; }
+  .line { width: 22px; border-top: 2px solid var(--text); }
+  .line.dotted { border-top-style: dotted; }
+
+  /* ---------- Export ---------- */
+  #modal { position: fixed; inset: 0; z-index: 10; background: rgba(0, 0, 0, .55); display: grid; place-items: center; padding: 24px; }
+  .sheet { width: min(760px, 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .sheet-head { display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 18px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  .icon-btn { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; }
+  .icon-btn:hover { background: var(--hover); color: var(--text); }
+  #exportText { flex: 1; min-height: 50vh; border: none; border-radius: 0; resize: none; font-size: 14px; }
+  .sheet-foot { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border); }
+  #copyMsg { color: var(--muted); font-size: 12px; }
+
+  @media (max-width: 760px) {
+    .brand { display: none; }
+    header { gap: 8px; padding: 0 10px; }
+    #app.list, #app.graph { grid-template-columns: 1fr; grid-template-rows: 40vh 1fr; }
+    #listView, #graphWrap { border-right: none; border-bottom: 1px solid var(--border); }
+    #detail, #app.graph #detail { padding: 20px 16px 32px; }
+    #answer { min-height: 30vh; }
+  }
+  @media (max-width: 480px) { .progress { display: none; } }
+</style>
+</head>
+<body>
+  <header>
+    <span class="brand" id="brand"></span>
+    <div class="seg" role="group" aria-label="View">
+      <button data-tab="list" aria-pressed="true"></button>
+      <button data-tab="graph" aria-pressed="false"></button>
+    </div>
+    <span class="spacer"></span>
+    <span class="progress" id="progress"></span>
+    <div class="seg" role="group" aria-label="Language">
+      <button data-lang="zh" aria-pressed="true">中</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <button class="btn primary" id="exportBtn"></button>
+  </header>
+
+  <div id="app" class="list">
+    <nav id="listView" aria-label="Questions"></nav>
+    <main id="graphWrap">
+      <canvas id="graph" aria-label="Question graph"></canvas>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--green)"></span><span id="lgDone"></span></span>
+        <span><span class="line"></span><span id="lgDirect"></span></span>
+        <span><span class="line dotted"></span><span id="lgIndirect"></span></span>
+      </div>
+    </main>
+    <section id="detail" aria-live="polite"></section>
+  </div>
+
+  <div id="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="sheet-head">
+        <span id="modalTitle"></span>
+        <span class="spacer"></span>
+        <button class="icon-btn" id="closeBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <textarea id="exportText" readonly></textarea>
+      <div class="sheet-foot">
+        <span id="copyMsg"></span>
+        <span class="spacer"></span>
+        <button class="btn primary" id="copyBtn"></button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ==========================================================
+   Questions: edit here
+   ========================================================== */
+// Groups appear in the list in the order their first question appears below.
+// angle = where the group sits on the graph (null = centre).
+const GROUPS = {
+  intro:   { zh: "自我介紹",        en: "Self-introduction",     color: "#F5F3F2", angle: null },
+  nstc:    { zh: "國科會研究",      en: "NSTC research",         color: "#A7BCE6", angle: 45 },
+  nccu:    { zh: "政大與未來",      en: "NCCU & future",         color: "#4874CB", angle: 90 },
+  algo:    { zh: "演算法與挑戰",    en: "Algorithms & pushback", color: "#7898D9", angle: 0 },
+  youtube: { zh: "史萊姆 YouTube",  en: "Slime YouTube",         color: "#EAB3AE", angle: 180 },
+  classes: { zh: "史萊姆課程",      en: "Slime classes",         color: "#DF8C86", angle: -135 },
+  gaga:    { zh: "GAGA monster",    en: "GAGA monster",          color: "#D4665E", angle: -90 },
+  fuji:    { zh: "富士軟片",        en: "FUJIFILM",              color: "#BE3C32", angle: -45 },
+  japan:   { zh: "國學院大學",      en: "Kokugakuin",            color: "#3059AB", angle: 135 },
+};
+
+// id | group | 中文短標 | English short title | 中文題目 | English question
+// IDs from the old bank are kept so saved answers carry over. Export sorts by ID (A1 → I10).
+const QUESTIONS_RAW = `
+A1|intro|自我介紹|Self-introduction|一分鐘自我介紹|One-minute self-introduction.
+E21|nstc|學術價值|Academic value|這個計畫的學術價值是什麼？|What is the academic value of this project?
+E1|nstc|為什麼做這個研究|Why this research|簡單介紹你的國科會研究（題目、理論、方法）。你為什麼選這個題目？|Briefly introduce your NSTC research (topic, theory, method). Why did you choose this topic?
+E4|nstc|為什麼用 S-O-R|Why S-O-R|S-O-R 是什麼？為什麼用它？（常見追問：這是1974年的模型，現在還適用嗎？）|What is S-O-R, and why use it? (Likely follow-up: it's a 1974 model. Does it still apply?)
+E25|nstc|為什麼用 2×2|Why 2×2|為什麼採用 2×2 實驗設計？|Why did you use a 2×2 experimental design?
+G6|nccu|未來研究方向|Future research|你未來的研究方向是什麼？|What is your future research direction?
+F3|nccu|為什麼換題目|Why switch topics|國科會做 AI 廣告，現在想做觸感玩具短影音，為什麼換題目？|Your NSTC project studies AI ads, and now you want to study tactile-toy short videos. Why change topics?
+G3|nccu|想在政大獲得什麼|What you want from NCCU|你希望在政大獲得什麼、學到什麼？|What do you hope to gain and learn at NCCU?
+G1|nccu|為什麼選政大|Why NCCU|為何選政大傳播而非世新相關系所？|Why NCCU's communication program instead of related programs at Shih Hsin?
+G4|nccu|為什麼不直接就業|Why not just work|你已經有產業經驗，為什麼不直接就業，而要讀研究所？學理論對你的目標有什麼幫助？|You already have industry experience. Why graduate school instead of going straight to work? How will learning theory help your goals?
+G12|nccu|畢業之後|After the program|讀完研究所之後，你希望做什麼？政大怎麼幫你走到那裡？|After the program, what do you hope to do, and how will NCCU help you get there?
+G11|nccu|想問我們什麼|Questions for us|你有什麼問題想問我們？|Do you have any questions for us?
+I10|algo|演算法監管|Algorithm regulation|最近有人呼籲加強演算法監管、保護兒少上網，你怎麼看？|There have been recent calls to strengthen algorithm regulation and protect young people online. What's your view?
+H16|algo|演算法與選擇|Algorithms and choice|你們探討演算法如何影響選擇，跟你的研究有什麼關係？|You explored how algorithms shape people's choices. How does that relate to your research?
+B1|youtube|怎麼開始的|How you started|你什麼時候開始做史萊姆、拍影片、賣史萊姆？為什麼開始？|When did you start making, filming and selling slime? Why did you start?
+B16|youtube|頻道帶你走到今天|How it shaped your path|經營史萊姆頻道，怎麼影響你走到今天？|How has your slime channel shaped where you are today?
+B17|youtube|從頻道學到的能力|Skills from the channel|你的頻道經營得不錯，你從中學到哪些能力？|Your channel did well. What skills did you gain from that success?
+C8|classes|你的史萊姆課|Your slime classes|多說一點你的史萊姆課，你是怎麼帶的？|Tell me more about your slime classes. How do you run them?
+C15|classes|負責人的角色|Your role as leader|你說你是負責人，你的角色是什麼？你怎麼帶領？|You said you were the leader. What was your role, and how did you lead?
+D19|gaga|在 GAGA 做什麼|What you did at GAGA|你在 GAGA monster 負責什麼？說說雪粉盲盒。|What did you do at GAGA monster? Tell me about the snow-powder blind box.
+D20|gaga|GAGA 讓你成長什麼|How GAGA helped you grow|在 GAGA monster 的經驗，怎麼幫助你成長？|How did your experience at GAGA monster help you grow?
+D21|fuji|為什麼去富士軟片|Why FUJIFILM|你才在富士軟片兩個月，為什麼選擇去那裡實習？|You've only been at FUJIFILM for two months. Why did you choose to intern there?
+D7|fuji|大企業 vs 史萊姆公司|Corporate vs slime company|在大企業工作，跟在 GAGA monster 這樣的史萊姆公司有什麼不同？讓你的經驗多了什麼？|How is working at a large company different from a slime company like GAGA monster? How has it widened your experience?
+H2|japan|為什麼去日本|Why Japan|你為什麼去日本留學？為什麼選國學院大學？|Why did you study abroad in Japan, and why Kokugakuin University?
+`;
+
+// Graph lines. Direct: a likely follow-up. Indirect: a question you can steer toward.
+const DIRECT_RAW = `
+A1>E1 A1>B1 A1>C8 A1>D19 A1>D21 A1>H2 A1>G1
+E1>E21 E1>E4 E1>E25
+G1>G3 G3>G6 G6>F3 G3>G4 G4>G12 G12>G11
+H16>I10
+B1>B16 B1>B17
+C8>C15
+D19>D20
+D21>D7
+`;
+const INDIRECT_RAW = `
+E1>F3 B16>F3 E21>G6 B17>D20 D7>D20 C8>I10 H16>E1 G4>D21 H2>G3 B16>C8
+`;
+
+/* ==========================================================
+   Text
+   ========================================================== */
+const T = {
+  zh: {
+    pageTitle: "NCCU 面試題庫", list: "清單", graph: "圖譜", export: "匯出回答",
+    progress: (n, total) => `已回答 ${n} / ${total}`,
+    placeholder: "寫下你的回答…", saved: "已存在這台電腦", notSaved: "無法儲存：瀏覽器封鎖了本機儲存",
+    chars: n => `${n} 字`, prev: "← 上一題", next: "下一題 →",
+    exportTitle: n => `匯出回答（${n} 題）`, copy: "複製全部", copied: "已複製",
+    copyFail: "請按 Ctrl+C（Mac：⌘+C）複製", noAnswers: "還沒有任何回答。",
+    removed: "—— 已移除題目的回答 ——",
+    lgDone: "已回答", lgDirect: "追問", lgIndirect: "可以帶到",
+  },
+  en: {
+    pageTitle: "NCCU interview bank", list: "List", graph: "Graph", export: "Export answers",
+    progress: (n, total) => `${n} / ${total} answered`,
+    placeholder: "Write your answer…", saved: "Saved on this computer", notSaved: "Not saved: this browser blocks local storage",
+    chars: n => `${n} characters`, prev: "← Previous", next: "Next →",
+    exportTitle: n => `Export answers (${n})`, copy: "Copy all", copied: "Copied",
+    copyFail: "Press Ctrl+C (Mac: ⌘+C) to copy", noAnswers: "No answers yet.",
+    removed: "—— Answers to removed questions ——",
+    lgDone: "Answered", lgDirect: "Follow-up", lgIndirect: "Can steer to",
+  },
+};
+
+/* ==========================================================
+   Model
+   ========================================================== */
+const QUESTIONS = QUESTIONS_RAW.trim().split("\n").map(line => {
+  const [id, group, tzh, ten, zh, en] = line.split("|").map(s => s.trim());
+  if (!GROUPS[group]) console.error("Unknown group:", id, group);
+  return { id, group, title: { zh: tzh, en: ten }, zh, en };
+});
+const byId = Object.fromEntries(QUESTIONS.map(q => [q.id, q]));
+const GROUPED = new Map();
+for (const q of QUESTIONS) {
+  if (!GROUPED.has(q.group)) GROUPED.set(q.group, []);
+  GROUPED.get(q.group).push(q);
+}
+const ORDER = [...GROUPED.values()].flat().map(q => q.id);
+// Natural ID order: A1, B1, B16, C8, C15, ...
+const byIdOrder = (a, b) => a[0] !== b[0] ? a.localeCompare(b) : (parseInt(a.slice(1), 10) || 0) - (parseInt(b.slice(1), 10) || 0);
+
+/* ---------- Saved state (this computer only) ---------- */
+const KEY = "nccu-interview-graph-v1"; // same key as the old page, so saved answers carry over
+let storageOk = true;
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "null") || {}; } catch { storageOk = false; }
+if (typeof saved !== "object" || Array.isArray(saved)) saved = {};
+const state = {
+  ...saved, // keeps any old fields untouched
+  lang: saved.lang === "en" ? "en" : "zh",
+  tab: saved.tab === "graph" ? "graph" : "list",
+  answers: saved.answers && typeof saved.answers === "object" ? saved.answers : {},
+};
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); storageOk = true; }
+  catch { storageOk = false; }
+  renderSaved();
+}
+
+const t = () => T[state.lang];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const answerOf = id => typeof state.answers[id] === "string" ? state.answers[id] : "";
+const isDone = id => answerOf(id).trim() !== "";
+const doneCount = () => ORDER.filter(isDone).length;
+
+/* ==========================================================
+   Routing: #/q/ID
+   ========================================================== */
+let selected = ORDER[0];
+function routeId() {
+  const m = location.hash.match(/^#\/q\/([A-Za-z]\d+)$/);
+  const id = m && m[1].toUpperCase();
+  return id && byId[id] ? id : null;
+}
+function onRoute() {
+  flushSave();
+  selected = routeId() || (byId[state.lastId] ? state.lastId : ORDER[0]);
+  if (state.lastId !== selected) { state.lastId = selected; persist(); }
+  renderList();
+  renderDetail();
+  updateTitle();
+  ensureVisible(selected);
+  dirty = true;
+}
+window.addEventListener("hashchange", onRoute);
+const go = id => { location.hash = `#/q/${id}`; };
+function updateTitle() {
+  document.title = `${byId[selected].title[state.lang]} · ${t().pageTitle}`;
+}
+
+/* ==========================================================
+   Header
+   ========================================================== */
+const app = document.getElementById("app");
+const tabButtons = [...document.querySelectorAll("[data-tab]")];
+const langButtons = [...document.querySelectorAll("[data-lang]")];
+function renderHeader() {
+  const L = t();
+  document.documentElement.lang = state.lang === "zh" ? "zh-Hant" : "en";
+  document.getElementById("brand").textContent = L.pageTitle;
+  tabButtons.forEach(b => { b.textContent = L[b.dataset.tab]; b.setAttribute("aria-pressed", String(b.dataset.tab === state.tab)); });
+  langButtons.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === state.lang)));
+  document.getElementById("exportBtn").textContent = L.export;
+  document.getElementById("lgDone").textContent = L.lgDone;
+  document.getElementById("lgDirect").textContent = L.lgDirect;
+  document.getElementById("lgIndirect").textContent = L.lgIndirect;
+  renderProgress();
+}
+function renderProgress() {
+  document.getElementById("progress").textContent = t().progress(doneCount(), ORDER.length);
+}
+tabButtons.forEach(b => b.onclick = () => {
+  state.tab = b.dataset.tab;
+  app.className = state.tab;
+  persist(); renderHeader(); dirty = true;
+});
+langButtons.forEach(b => b.onclick = () => {
+  flushSave();
+  state.lang = b.dataset.lang;
+  persist(); renderHeader(); renderList(); renderDetail(); updateTitle(); dirty = true;
+});
+
+/* ==========================================================
+   List
+   ========================================================== */
+const listView = document.getElementById("listView");
+const CHECK_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10301a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
+function renderList() {
+  const lang = state.lang;
+  let html = "";
+  for (const [key, qs] of GROUPED) {
+    const g = GROUPS[key];
+    html += `<div class="group">
+      <div class="group-head"><span class="dot" style="background:${g.color}"></span><span>${esc(g[lang])}</span><span class="count">${qs.filter(q => isDone(q.id)).length} / ${qs.length}</span></div>
+      ${qs.map(q => `<a class="item${q.id === selected ? " active" : ""}${isDone(q.id) ? " done" : ""}" href="#/q/${q.id}"${q.id === selected ? ' aria-current="true"' : ""}>
+        <span class="status">${CHECK_SVG}</span>
+        <span class="item-text"><span class="item-title">${esc(q.title[lang])}</span><span class="item-q">${esc(q[lang])}</span></span>
+      </a>`).join("")}
+    </div>`;
+  }
+  listView.innerHTML = html;
+  const active = listView.querySelector(".item.active");
+  if (active && state.tab === "list") active.scrollIntoView({ block: "nearest" });
+}
+
+/* ==========================================================
+   Question + answer
+   ========================================================== */
+const detail = document.getElementById("detail");
+let saveTimer = null;
+let pending = false;
+function renderDetail() {
+  const L = t();
+  const q = byId[selected];
+  const g = GROUPS[q.group];
+  const i = ORDER.indexOf(selected);
+  detail.innerHTML = `<div class="detail-inner">
+    <div class="meta">
+      <span class="chip"><span class="dot" style="background:${g.color}"></span>${esc(g[state.lang])}</span>
+      <span>${i + 1} / ${ORDER.length}</span>
+      <span class="spacer"></span>
+      <span>${q.id}</span>
+    </div>
+    <h1 class="qtitle">${esc(q.title[state.lang])}</h1>
+    <p class="qtext">${esc(q[state.lang])}</p>
+    <textarea id="answer" placeholder="${esc(L.placeholder)}" aria-label="${esc(q.title[state.lang])}"></textarea>
+    <div class="foot">
+      <span class="saved"><span class="dot" id="saveDot"></span><span id="saveText"></span></span>
+      <span class="spacer"></span>
+      <button class="btn" id="prevBtn"${i <= 0 ? " disabled" : ""}>${L.prev}</button>
+      <button class="btn" id="nextBtn"${i >= ORDER.length - 1 ? " disabled" : ""}>${L.next}</button>
+    </div>
+  </div>`;
+  const box = document.getElementById("answer");
+  box.value = answerOf(selected);
+  box.addEventListener("input", onInput);
+  box.addEventListener("blur", flushSave);
+  document.getElementById("prevBtn").onclick = () => go(ORDER[i - 1]);
+  document.getElementById("nextBtn").onclick = () => go(ORDER[i + 1]);
+  renderSaved();
+}
+function onInput(e) {
+  const was = isDone(selected);
+  const v = e.target.value;
+  if (v.trim()) state.answers[selected] = v; else delete state.answers[selected];
+  if (was !== isDone(selected)) { renderList(); renderProgress(); dirty = true; }
+  pending = true;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 400);
+  renderSaved();
+}
+function flushSave() {
+  clearTimeout(saveTimer);
+  if (pending) { pending = false; persist(); }
+}
+window.addEventListener("beforeunload", flushSave);
+document.addEventListener("visibilitychange", () => { if (document.hidden) flushSave(); });
+function renderSaved() {
+  const text = document.getElementById("saveText");
+  if (!text) return;
+  const L = t();
+  const n = answerOf(selected).replace(/\s/g, "").length;
+  text.textContent = storageOk ? `${L.saved} · ${L.chars(n)}` : L.notSaved;
+  document.getElementById("saveDot").style.background = storageOk ? "var(--green)" : "var(--red)";
+}
+
+/* ==========================================================
+   Export: every non-blank answer, sorted A1 → alphabetical
+   ========================================================== */
+const modal = document.getElementById("modal");
+const exportText = document.getElementById("exportText");
+const copyBtn = document.getElementById("copyBtn");
+const copyMsg = document.getElementById("copyMsg");
+function buildExport() {
+  const L = t();
+  const ids = Object.keys(state.answers).filter(isDone);
+  const current = ids.filter(id => byId[id]).sort(byIdOrder);
+  const removed = ids.filter(id => !byId[id]).sort(byIdOrder);
+  const blocks = current.map(id => `${id}. ${byId[id][state.lang]}\n${answerOf(id).trim()}`);
+  if (removed.length) {
+    blocks.push(L.removed);
+    blocks.push(...removed.map(id => `${id}.\n${answerOf(id).trim()}`));
+  }
+  return { text: blocks.join("\n\n"), count: ids.length };
+}
+function openExport() {
+  flushSave();
+  const L = t();
+  const { text, count } = buildExport();
+  document.getElementById("modalTitle").textContent = L.exportTitle(count);
+  exportText.value = count ? text : L.noAnswers;
+  copyBtn.textContent = L.copy;
+  copyBtn.disabled = !count;
+  copyMsg.textContent = "";
+  modal.hidden = false;
+  exportText.scrollTop = 0;
+  copyBtn.focus();
+}
+function closeExport() { modal.hidden = true; document.getElementById("exportBtn").focus(); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch {}
+  try { exportText.focus(); exportText.select(); return document.execCommand("copy"); } catch { return false; }
+}
+document.getElementById("exportBtn").onclick = openExport;
+document.getElementById("closeBtn").onclick = closeExport;
+modal.addEventListener("click", e => { if (e.target === modal) closeExport(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !modal.hidden) closeExport(); });
+copyBtn.onclick = async () => {
+  const ok = await copyText(exportText.value);
+  copyMsg.textContent = ok ? t().copied : t().copyFail;
+  if (!ok) { exportText.focus(); exportText.select(); }
+};
+
+/* ==========================================================
+   Graph: layout
+   ========================================================== */
+const canvas = document.getElementById("graph");
+const ctx = canvas.getContext("2d");
+const wrap = document.getElementById("graphWrap");
+let W = 0, H = 0, dpr = 1;
+let view = { k: 1, x: 0, y: 0 };
+let dirty = true;
+let fitted = false;
+
+const parseLinks = raw => raw.trim().split(/\s+/).filter(Boolean).map(e => e.split(">")).filter(([a, b]) => {
+  if (byId[a] && byId[b]) return true;
+  console.error("Link to an unknown question:", a, b); return false;
+});
+const neighbors = Object.fromEntries(QUESTIONS.map(q => [q.id, new Set()]));
+const EDGES = [];
+const edgeKey = new Set();
+for (const [kind, list] of [["direct", parseLinks(DIRECT_RAW)], ["indirect", parseLinks(INDIRECT_RAW)]]) {
+  for (const [a, b] of list) {
+    const k = [a, b].sort().join("|");
+    if (edgeKey.has(k)) continue;
+    edgeKey.add(k);
+    EDGES.push({ a, b, kind });
+    neighbors[a].add(b); neighbors[b].add(a);
+  }
+}
+
+const CENTER = {};
+for (const [key, g] of Object.entries(GROUPS)) {
+  if (g.angle == null) { CENTER[key] = { x: 0, y: 0 }; continue; }
+  const a = g.angle * Math.PI / 180;
+  CENTER[key] = { x: Math.cos(a) * 320, y: -Math.sin(a) * 240 };
+}
+const PHYS = { repel: 200, cluster: 0.14, directDist: 60, directK: 0.12, indirectDist: 150, indirectK: 0.002, collide: 22 };
+let seed = 7;
+const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const nodes = QUESTIONS.map(q => {
+  const c = CENTER[q.group];
+  const centre = GROUPS[q.group].angle == null && q.id === ORDER[0];
+  return { id: q.id, g: q.group, x: centre ? c.x : c.x + (rand() - 0.5) * 60, y: centre ? c.y : c.y + (rand() - 0.5) * 60,
+           vx: 0, vy: 0, r: centre ? 13 : 7 + Math.sqrt(neighbors[q.id].size) * 1.8, fixed: centre };
+});
+const N = Object.fromEntries(nodes.map(n => [n.id, n]));
+const links = EDGES.map(e => ({ ...e, s: N[e.a], t: N[e.b] }));
+
+let alpha = 1;
+function tick() {
+  alpha *= 0.985;
+  for (let i = 0; i < nodes.length; i++) {
+    const a = nodes[i];
+    for (let j = i + 1; j < nodes.length; j++) {
+      const b = nodes[j];
+      let dx = b.x - a.x, dy = b.y - a.y;
+      let d2 = dx * dx + dy * dy;
+      if (d2 < 1) { dx = rand() - 0.5; dy = rand() - 0.5; d2 = 1; }
+      const f = PHYS.repel * alpha / d2;
+      a.vx -= dx * f; a.vy -= dy * f; b.vx += dx * f; b.vy += dy * f;
+      const minD = a.r + b.r + PHYS.collide;
+      if (d2 < minD * minD) {
+        const d = Math.sqrt(d2), push = (minD - d) / d * 0.5;
+        a.vx -= dx * push; a.vy -= dy * push; b.vx += dx * push; b.vy += dy * push;
+      }
+    }
+  }
+  for (const l of links) {
+    const dist = l.kind === "direct" ? PHYS.directDist : PHYS.indirectDist;
+    const k = l.kind === "direct" ? PHYS.directK : PHYS.indirectK;
+    const dx = l.t.x - l.s.x, dy = l.t.y - l.s.y;
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    const f = (d - dist) / d * alpha * k;
+    l.s.vx += dx * f; l.s.vy += dy * f; l.t.vx -= dx * f; l.t.vy -= dy * f;
+  }
+  for (const n of nodes) {
+    const c = CENTER[n.g];
+    n.vx += (c.x - n.x) * PHYS.cluster * alpha;
+    n.vy += (c.y - n.y) * PHYS.cluster * alpha;
+    if (n.fixed || n.pinned) { n.vx = 0; n.vy = 0; continue; }
+    n.vx *= 0.6; n.vy *= 0.6;
+    n.x += n.vx; n.y += n.vy;
+  }
+}
+for (let i = 0; i < 400; i++) tick();
+alpha = 0;
+
+/* ---------- Graph: view ---------- */
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = wrap.clientWidth; H = wrap.clientHeight;
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  dirty = true;
+}
+function fit() {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of nodes) { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); }
+  const padX = 180, padY = 100; // room for the group labels at the sides
+  view.k = Math.max(0.3, Math.min((W - padX * 2) / (x1 - x0), (H - padY * 2) / (y1 - y0), 1.8));
+  view.x = W / 2 - (x0 + x1) / 2 * view.k;
+  view.y = H / 2 - (y0 + y1) / 2 * view.k;
+  dirty = true;
+}
+function ensureVisible(id) {
+  const n = N[id];
+  if (!n || !W) return;
+  const sx = n.x * view.k + view.x, sy = n.y * view.k + view.y;
+  if (sx < 60 || sx > W - 60 || sy < 60 || sy > H - 60) {
+    view.x = W / 2 - n.x * view.k; view.y = H / 2 - n.y * view.k; dirty = true;
+  }
+}
+const toWorld = (sx, sy) => ({ x: (sx - view.x) / view.k, y: (sy - view.y) / view.k });
+function nodeAt(sx, sy) {
+  const p = toWorld(sx, sy);
+  let best = null, bestD = Infinity;
+  for (const n of nodes) {
+    const d = Math.hypot(n.x - p.x, n.y - p.y);
+    if (d < n.r + 6 / view.k && d < bestD) { best = n; bestD = d; }
+  }
+  return best;
+}
+
+/* ---------- Graph: drawing ---------- */
+let hover = null;
+function draw() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.translate(view.x, view.y);
+  ctx.scale(view.k, view.k);
+  const k = view.k;
+  const focus = hover ? hover.id : selected;
+  const focusSet = focus ? new Set([focus, ...neighbors[focus]]) : null;
+
+  for (const l of links) {
+    const hl = focus && (l.a === focus || l.b === focus);
+    ctx.beginPath();
+    ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y);
+    ctx.setLineDash(l.kind === "indirect" ? [2 / k, 4 / k] : []);
+    ctx.lineWidth = (hl ? 1.8 : 1) / k;
+    ctx.strokeStyle = hl ? "#A7BCE6" : (focusSet ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.16)");
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  for (const n of nodes) {
+    ctx.globalAlpha = focusSet && !focusSet.has(n.id) ? 0.25 : 1;
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = isDone(n.id) ? "#34C759" : GROUPS[n.g].color;
+    ctx.fill();
+    if (n.id === selected) {
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 6 / k, 0, Math.PI * 2);
+      ctx.lineWidth = 2 / k; ctx.strokeStyle = "#ffffff"; ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  const FONT = `Inter, "PingFang TC", "Microsoft JhengHei", sans-serif`;
+  const placed = [];
+
+  // Group labels sit just outside each cluster; their space is reserved first.
+  const groupLabels = [];
+  ctx.font = `600 ${13 / k}px ${FONT}`;
+  for (const [key, qs] of GROUPED) {
+    if (GROUPS[key].angle == null) continue;
+    const members = nodes.filter(n => n.g === key);
+    const cx = members.reduce((v, n) => v + n.x, 0) / members.length;
+    const cy = members.reduce((v, n) => v + n.y, 0) / members.length;
+    const len = Math.hypot(cx, cy) || 1;
+    const ux = cx / len, uy = cy / len;
+    const reach = Math.max(...members.map(n => (n.x - cx) * ux + (n.y - cy) * uy + n.r));
+    const off = reach + (Math.abs(uy) > 0.7 ? 22 : 30) / k + Math.abs(ux) * 40 / k;
+    const text = `${GROUPS[key][state.lang]} · ${qs.filter(q => isDone(q.id)).length}/${qs.length}`;
+    const x = cx + ux * off, y = cy + uy * off;
+    const w = ctx.measureText(text).width, h = 16 / k;
+    groupLabels.push({ text, x, y, color: GROUPS[key].color });
+    placed.push({ x: x - w / 2, y: y - h / 2, w, h });
+  }
+
+  // Nodes also block labels, so a title never covers another question's dot.
+  for (const n of nodes) placed.push({ x: n.x - n.r - 1 / k, y: n.y - n.r - 1 / k, w: 2 * n.r + 2 / k, h: 2 * n.r + 2 / k });
+
+  // Question titles: focused ones first, each moved to a free spot so none overlap.
+  const labelAlpha = Math.max(0, Math.min(1, (k - 0.35) / 0.3));
+  const rank = n => n.id === focus ? 3 : (focusSet && focusSet.has(n.id) ? 2 : 1);
+  const hits = r => placed.some(p => r.x < p.x + p.w && r.x + r.w > p.x && r.y < p.y + p.h && r.y + r.h > p.y);
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  for (const n of [...nodes].sort((a, b) => rank(b) - rank(a))) {
+    const strong = focusSet && focusSet.has(n.id);
+    const a = strong ? 1 : (focusSet ? labelAlpha * 0.35 : labelAlpha * 0.8);
+    if (a <= 0.02) continue;
+    const size = (strong ? 12 : 11) / k;
+    ctx.font = `${size}px ${FONT}`;
+    const text = byId[n.id].title[state.lang];
+    const w = ctx.measureText(text).width, h = size * 1.3, gap = 4 / k;
+    const spots = [
+      { x: n.x - w / 2, y: n.y + n.r + gap },
+      { x: n.x - w / 2, y: n.y - n.r - gap - h },
+      { x: n.x + n.r + gap, y: n.y - h / 2 },
+      { x: n.x - n.r - gap - w, y: n.y - h / 2 },
+    ];
+    if (strong) for (let i = 1; i <= 3; i++) {
+      spots.push({ x: n.x - w / 2, y: n.y + n.r + gap + i * h }, { x: n.x - w / 2, y: n.y - n.r - gap - (i + 1) * h });
+    }
+    let spot = spots.find(c => !hits({ ...c, w, h }));
+    if (!spot) { if (!strong) continue; spot = spots[0]; }
+    placed.push({ ...spot, w, h });
+    ctx.globalAlpha = a;
+    if (strong) {
+      ctx.fillStyle = "rgba(30,30,30,0.8)";
+      ctx.fillRect(spot.x - 3 / k, spot.y - 1 / k, w + 6 / k, h + 1 / k);
+    }
+    ctx.fillStyle = strong ? "#dadada" : "#b3b3b3";
+    ctx.fillText(text, spot.x, spot.y);
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = `600 ${13 / k}px ${FONT}`;
+  for (const l of groupLabels) {
+    ctx.globalAlpha = focusSet ? 0.5 : 0.95;
+    ctx.fillStyle = l.color;
+    ctx.fillText(l.text, l.x, l.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- Graph: interaction ---------- */
+let drag = null;
+canvas.addEventListener("pointerdown", e => {
+  const n = nodeAt(e.offsetX, e.offsetY);
+  drag = { node: n, sx: e.offsetX, sy: e.offsetY, vx: view.x, vy: view.y, moved: false };
+  canvas.setPointerCapture(e.pointerId);
+  if (!n) canvas.classList.add("dragging");
+});
+canvas.addEventListener("pointermove", e => {
+  if (drag) {
+    const dx = e.offsetX - drag.sx, dy = e.offsetY - drag.sy;
+    if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+    if (drag.node) {
+      if (drag.moved && !drag.node.fixed) {
+        const p = toWorld(e.offsetX, e.offsetY);
+        drag.node.pinned = true;
+        drag.node.x = p.x; drag.node.y = p.y; drag.node.vx = 0; drag.node.vy = 0;
+        alpha = Math.max(alpha, 0.25);
+      }
+    } else {
+      view.x = drag.vx + dx; view.y = drag.vy + dy;
+    }
+    dirty = true;
+    return;
+  }
+  const n = nodeAt(e.offsetX, e.offsetY);
+  if (n !== hover) { hover = n; dirty = true; }
+  canvas.classList.toggle("on-node", !!n);
+});
+canvas.addEventListener("pointerup", () => {
+  if (drag && drag.node && !drag.moved) go(drag.node.id);
+  if (drag && drag.node) drag.node.pinned = false;
+  drag = null;
+  canvas.classList.remove("dragging");
+});
+canvas.addEventListener("pointerleave", () => { if (!drag && hover) { hover = null; dirty = true; } });
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const k = Math.max(0.25, Math.min(4, view.k * Math.exp(-e.deltaY * 0.0015)));
+  const p = toWorld(e.offsetX, e.offsetY);
+  view.k = k; view.x = e.offsetX - p.x * k; view.y = e.offsetY - p.y * k;
+  dirty = true;
+}, { passive: false });
+
+/* ==========================================================
+   Start
+   ========================================================== */
+new ResizeObserver(() => {
+  resize();
+  if (W > 0 && !fitted) { fit(); fitted = true; }
+  if (W > 0) ensureVisible(selected);
+}).observe(wrap);
+function frame() {
+  if (alpha > 0.005) { tick(); dirty = true; }
+  if (dirty && W > 0) { draw(); dirty = false; }
+  requestAnimationFrame(frame);
+}
+app.className = state.tab;
+renderHeader();
+onRoute();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
